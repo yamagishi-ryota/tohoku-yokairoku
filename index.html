@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#141d1a" />
+    <title>東北妖解録</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <span class="eyebrow">七つの書と、土地の記憶</span>
+        <h1>東北妖解録</h1>
+      </div>
+      <div class="tools">
+        <button id="help">遊び方</button><button id="se">効果音 ON</button
+        ><button id="bgm">環境音 OFF</button
+        ><button id="reset">最初から</button>
+      </div>
+    </header>
+    <nav id="chapters" aria-label="七つの書"></nav>
+    <main>
+      <section class="deck-section" aria-label="54枚の札">
+        <div class="deck-heading">
+          <span>記憶の札 <small>札を押して選択 · ＋で拡大</small></span
+          ><small>金：選択 ／ ◆：解放済み ／ ×：捨て札</small>
+        </div>
+        <div id="deck"></div>
+      </section>
+      <aside>
+        <div class="paper">
+          <span class="eyebrow">封じられた書</span>
+          <h2 id="heading"></h2>
+          <ol id="lines"></ol>
+        </div>
+        <div class="controls">
+          <p id="selection"></p>
+          <p id="selected-names"></p>
+          <button id="attempt" class="primary">解放を試みる</button>
+          <p id="message" role="status" aria-live="polite"></p>
+          <p id="lock" role="timer"></p>
+          <div class="pair">
+            <button id="oracle">神のお告げ</button
+            ><button id="recover">カード回収</button>
+          </div>
+          <div class="pair">
+            <button id="prev">前の書</button><button id="next">次の書</button>
+          </div>
+          <button id="end">旅を終える</button>
+          <p id="save-status" role="status"></p>
+        </div>
+      </aside>
+    </main>
+    <footer>
+      東北の地に残る、声なき物語。 <span>画像：既存の未確認候補素材</span>
+    </footer>
+    <dialog id="modal" aria-labelledby="modal-title">
+      <div id="modal-content"></div>
+      <button id="close">閉じる</button>
+    </dialog>
+    <div id="fatal" role="alert" hidden></div>
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
