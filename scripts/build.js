@@ -1,7 +1,7 @@
 import { mkdir, rm, cp, readFile, access } from "node:fs/promises";
 const cards = JSON.parse(await readFile("cards.json", "utf8"));
 for (const c of cards) await access(c.image);
-await access("assets/yokai/atlas.png");
+await access("assets/yokai/atlas-cinematic.png");
 await access("assets/fonts/YujiSyuku-game.ttf");
 await access("assets/fonts/OFL.txt");
 await rm("dist", { recursive: true, force: true });

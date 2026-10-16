@@ -207,7 +207,7 @@ try {
   assert.equal(
     await page.evaluate(async () => {
       const img = new Image();
-      img.src = "assets/yokai/atlas.png";
+      img.src = "assets/yokai/atlas-cinematic.png";
       await img.decode();
       return img.naturalWidth > 0;
     }),
@@ -285,7 +285,7 @@ try {
     assert.equal(appearance.nameFilter, "none");
     assert.equal(appearance.buttonFilter, "none");
     assert.notEqual(appearance.imageFilter, "none");
-    assert.equal(appearance.nameColor, "rgb(238, 231, 211)");
+    assert.equal(appearance.nameColor, "rgb(23, 27, 20)");
     assert.equal(appearance.opacity, "1");
     assert.equal(appearance.contained, true);
   }
@@ -299,7 +299,34 @@ try {
   );
   await page.screenshot({ path: "test-results/card-names-and-crops.png" });
   console.log(
-    "PASS: released and discarded names remain bright, images alone dim, and all 54 positions stay fixed",
+    "PASS: released and discarded names keep high contrast, image brightness is preserved, and all 54 positions stay fixed",
+  );
+  const labels = await page.locator(".card").evaluateAll((elements) =>
+    elements.map((element) => {
+      const label = element.querySelector(".name"),
+        image = element.querySelector("img");
+      const nameBounds = label.getBoundingClientRect(),
+        imageBounds = image.getBoundingClientRect();
+      return {
+        id: element.dataset.id,
+        outsideDisabledButton: label.closest("button") === null,
+        legible:
+          getComputedStyle(label).fontSize === "11px" &&
+          label.scrollHeight <= label.clientHeight,
+        separated: imageBounds.bottom <= nameBounds.top + 1,
+        imageBrightnessUnchanged:
+          !getComputedStyle(image).filter.includes("brightness"),
+      };
+    }),
+  );
+  for (const label of labels) {
+    assert.equal(label.outsideDisabledButton, true, label.id);
+    assert.equal(label.legible, true, label.id);
+    assert.equal(label.separated, true, label.id);
+    assert.equal(label.imageBrightnessUnchanged, true, label.id);
+  }
+  console.log(
+    "PASS: all 54 names use independent high-contrast labels; fixed image frames do not overlap names or apply darkening",
   );
   assert.deepEqual(errors, []);
 } finally {

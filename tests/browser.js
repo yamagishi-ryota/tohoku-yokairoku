@@ -275,7 +275,9 @@ try {
     viewport: { width: 1366, height: 768 },
   });
   fallback.on("pageerror", (e) => errors.push(e.message));
-  await fallback.route("**/assets/cards/*.png", (route) => route.abort());
+  await fallback.route(/\/assets\/cards\/[^/]+\.png(?:\?.*)?$/, (route) =>
+    route.abort(),
+  );
   await fallback.goto("http://127.0.0.1:8765/");
   await fallback.waitForSelector(".card", { state: "attached" });
   if (await fallback.locator("#intro").isVisible())
