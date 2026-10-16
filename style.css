@@ -147,15 +147,16 @@ main {
   box-shadow: 0 0 10px #d8ae5855;
 }
 .choose {
+  position: absolute;
+  inset: 0 0 28px;
   padding: 0;
   border: 0;
   border-radius: 0;
   width: 100%;
-  height: 100%;
+  height: auto;
   background: #111a16;
   color: #eee7d3;
-  display: flex;
-  flex-direction: column;
+  display: block;
   overflow: hidden;
   align-items: center;
 }
@@ -166,23 +167,29 @@ main {
   opacity: 1;
 }
 .card img {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  flex: 1 1 0;
-  height: 0;
+  height: 100%;
   min-height: 0;
   object-fit: contain;
-  object-position: center;
+  object-position: center top;
   display: block;
 }
 .card .name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  font: 9px/1.15 system-ui;
+  height: 28px;
+  font: 600 11px/1.15 system-ui;
   text-align: center;
   padding: 1px 0;
-  min-height: 21px;
-  flex-shrink: 0;
-  color: #eee7d3;
-  background: #26332a;
+  color: #171b14;
+  background: #f2e7c9;
+  border-top: 1px solid #a78c55;
+  overflow-wrap: anywhere;
+  cursor: pointer;
   display: grid;
   place-items: center;
 }
@@ -208,12 +215,12 @@ main {
   border-color: #c2b383;
 }
 .unavailable .choose img {
-  filter: brightness(0.38) saturate(0.4);
+  filter: saturate(0.6);
 }
 .badge,
 .certainty {
   position: absolute;
-  bottom: 23px;
+  bottom: 30px;
   left: 1px;
   right: 1px;
   background: #13211bee;
@@ -429,7 +436,7 @@ dialog button {
 .yokai-art {
   width: 100%;
   height: 100%;
-  background-image: url("assets/yokai/atlas.png");
+  background-image: url("assets/yokai/atlas-cinematic.png");
   background-size: 400% 200%;
   background-position: var(--yokai-x) var(--yokai-y);
   animation: spirit-appear 1.8s ease-out both;

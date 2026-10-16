@@ -110,7 +110,7 @@ try {
     const c = byId[id],
       body = open(`${c.display_rank}　${c.name}`),
       img = node("img", undefined, "enlarged");
-    img.src = c.image;
+    img.src = `${c.image}?v=frames-2`;
     img.alt = c.name;
     img.onerror = () => img.remove();
     body.append(img, node("p", c.description));
@@ -154,17 +154,23 @@ try {
     choose.className = "choose";
     choose.setAttribute("aria-label", `${c.display_rank} ${c.name}を選択`);
     const img = node("img");
-    img.src = c.image;
+    img.src = `${c.image}?v=frames-2`;
     img.alt = "";
     img.onerror = () => (img.hidden = true);
-    choose.append(img, node("span", c.name, "name"));
+    choose.append(img);
+    // Keep the readable label outside the disabled image button and its effects.
+    const name = node("span", c.name, "name");
+    name.title = `${c.display_rank} ${c.name}`;
+    name.onclick = () => {
+      if (!choose.disabled) choose.click();
+    };
     const rank = node("span", c.display_rank, "rank"),
       enlarge = btn("＋", () => zoom(c.id));
     enlarge.className = "zoom";
     enlarge.setAttribute("aria-label", `${c.name}を拡大`);
     const badge = node("span", "", "badge");
     const certainty = node("span", "", "certainty");
-    wrap.append(choose, rank, enlarge, badge, certainty);
+    wrap.append(choose, name, rank, enlarge, badge, certainty);
     $("deck").append(wrap);
     cardElements.set(c.id, { wrap, choose, badge, certainty });
   });
