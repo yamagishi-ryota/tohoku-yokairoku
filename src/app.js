@@ -1,4 +1,5 @@
 import { createGame, SAVE_KEY } from "./game.js";
+import { createAudio } from "./audio.js";
 const $ = (id) => document.getElementById(id);
 const node = (tag, text, cls) => {
   const e = document.createElement(tag);
@@ -20,9 +21,7 @@ try {
     byId = Object.fromEntries(cards.map((c) => [c.id, c]));
   let state,
     blocked = false,
-    message = "",
-    audio,
-    ambient = [];
+    message = "";
   try {
     state = game.restore(localStorage.getItem(SAVE_KEY));
   } catch {
@@ -40,47 +39,34 @@ try {
       return false;
     }
   }
-  function context() {
-    audio ??= new AudioContext();
-    if (audio.state === "suspended") audio.resume();
-    return audio;
-  }
+  const audio = createAudio((text) => {
+    $("audio-status").textContent = text;
+  });
   function sound(success) {
-    if (!state.se) return;
-    try {
-      const ctx = context();
-      [110, 165, 220, 330].forEach((f, i) => {
-        const osc = ctx.createOscillator(),
-          gain = ctx.createGain(),
-          t = ctx.currentTime + i * 0.15;
-        osc.type = "sine";
-        osc.frequency.value = success ? f : f * 0.65;
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.12, t + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(t);
-        osc.stop(t + 2);
-      });
-    } catch {}
+    if (state.se) void audio.play(success);
   }
   function ambience() {
-    ambient.forEach((o) => o.stop());
-    ambient = [];
-    if (!state.bgm) return;
-    try {
-      const ctx = context();
-      [55, 82.4].forEach((f) => {
-        const o = ctx.createOscillator(),
-          g = ctx.createGain();
-        o.frequency.value = f;
-        g.gain.value = 0.018;
-        o.connect(g).connect(ctx.destination);
-        o.start();
-        ambient.push(o);
-      });
-    } catch {}
+    void audio.ambience(state.bgm);
   }
+  $("sound-test").onclick = async () => {
+    const played = await audio.play(true);
+    if (played)
+      $("audio-status").textContent =
+        "確認音を再生しました。聞こえない場合は端末の音量・タブのミュートを確認してください。";
+  };
+  function enterGame() {
+    document.body.classList.remove("on-intro");
+    $("intro").hidden = true;
+    try {
+      sessionStorage.setItem("tohoku-entered", "1");
+    } catch {}
+    void audio.unlock();
+    ambience();
+    render();
+    if (state.se) sound(true);
+    if (state.ending) ending();
+  }
+  $("begin").onclick = enterGame;
   const modal = $("modal"),
     content = $("modal-content");
   let lastFocus;
@@ -177,9 +163,10 @@ try {
     enlarge.className = "zoom";
     enlarge.setAttribute("aria-label", `${c.name}を拡大`);
     const badge = node("span", "", "badge");
-    wrap.append(choose, rank, enlarge, badge);
+    const certainty = node("span", "", "certainty");
+    wrap.append(choose, rank, enlarge, badge, certainty);
     $("deck").append(wrap);
-    cardElements.set(c.id, { wrap, choose, badge });
+    cardElements.set(c.id, { wrap, choose, badge, certainty });
   });
   function render() {
     const chapter = chapters[state.current],
@@ -219,9 +206,19 @@ try {
       (ch.solved ? "札は解放に使われました" : "札を選んでください");
     $("message").textContent = message;
     cards.forEach((c) => {
-      const { wrap, choose, badge } = cardElements.get(c.id),
+      const { wrap, choose, badge, certainty } = cardElements.get(c.id),
         status = state.cards[c.id],
         selected = ch.selected.includes(c.id);
+      const knowledge = ch.oracleNotes
+        .filter((n) => n.type === "card" && n.target === c.id)
+        .at(-1);
+      certainty.hidden = !knowledge;
+      certainty.textContent = knowledge
+        ? knowledge.answer === "必要"
+          ? "✓ 確定"
+          : "不要"
+        : "";
+      wrap.classList.toggle("confirmed", knowledge?.answer === "必要");
       wrap.classList.toggle("selected", selected);
       wrap.classList.toggle("unavailable", status !== "available");
       choose.disabled =
@@ -233,6 +230,12 @@ try {
       badge.hidden = status === "available";
       badge.textContent = status === "released" ? "◆ 解放済み" : "× 捨て札";
     });
+    const latest = ch.oracleNotes.at(-1);
+    $("oracle-summary").textContent = latest
+      ? noteText(latest)
+      : "お告げの記録なし";
+    $("oracle-summary").title = $("oracle-summary").textContent;
+    $("oracle-history").disabled = !latest;
     $("se").textContent = `効果音 ${state.se ? "ON" : "OFF"}`;
     $("bgm").textContent = `環境音 ${state.bgm ? "ON" : "OFF"}`;
     sync();
@@ -244,12 +247,35 @@ try {
       save();
       render();
       sound(success);
-      if (success) {
-        const body = open("封印解放"),
-          ritual = node("div", undefined, "ritual");
-        ritual.append(node("div", "封印解放", "seal"));
-        body.append(ritual, node("p", "書を包む気配が、静かにほどけていく。"));
-      }
+      const body = open(success ? "封印解放" : "解放できなかった……");
+      const ritual = node(
+        "div",
+        undefined,
+        `ritual ${success ? "released" : "concealed"}`,
+      );
+      const art = node("div", undefined, "yokai-art");
+      art.style.setProperty("--yokai-x", `${((state.current % 4) * 100) / 3}%`);
+      art.style.setProperty("--yokai-y", state.current < 4 ? "0%" : "100%");
+      art.setAttribute("role", "img");
+      art.setAttribute(
+        "aria-label",
+        success
+          ? chapters[state.current].yokai + "のイラスト"
+          : "影に隠された妖のイラスト",
+      );
+      ritual.append(
+        art,
+        node("div", success ? "封印解放" : "封印は解けず", "seal"),
+      );
+      body.append(
+        ritual,
+        node(
+          "p",
+          success
+            ? "書を包む気配が、静かにほどけていく。"
+            : "妖の姿は、まだ影の中にある。",
+        ),
+      );
     } catch (e) {
       message = e.message;
       render();
@@ -414,7 +440,7 @@ try {
   document.addEventListener(
     "pointerdown",
     () => {
-      if (state.bgm && !ambient.length) ambience();
+      if (state.bgm) ambience();
     },
     { once: true },
   );
@@ -456,7 +482,36 @@ try {
       ),
     );
   };
+  function noteText(note) {
+    if (note.type === "card")
+      return `${byId[note.target].name}：${note.answer === "必要" ? "確定（必要）" : "不要"}`;
+    if (note.type === "group")
+      return `質問時の組：${note.answer}枚が一致（現在の選択とは別）`;
+    return `質問時の捨て札：${note.answer}`;
+  }
+  $("oracle-history").onclick = () => {
+    const body = open("この書のお告げの記録");
+    for (const note of state.chapters[state.current].oracleNotes) {
+      body.append(node("p", noteText(note)));
+      if (note.type === "group")
+        body.append(
+          node(
+            "small",
+            `質問した札：${note.selection.map((id) => byId[id].name).join("・") || "選択なし"}`,
+          ),
+        );
+    }
+  };
   render();
+  $("intro-save").textContent = state.chapters.some((ch) => ch.attemptCount > 0)
+    ? "保存された旅の続きから再開します。"
+    : "進行はこのブラウザに自動保存されます。";
+  try {
+    if (sessionStorage.getItem("tohoku-entered") === "1") {
+      document.body.classList.remove("on-intro");
+      $("intro").hidden = true;
+    }
+  } catch {}
   if (blocked) {
     open("保存データを読み込めません").append(
       node(
@@ -464,7 +519,7 @@ try {
         "元の保存データを保持しています。必要ならブラウザの保存内容を退避してください。「最初から」で確認後に初期化できます。",
       ),
     );
-  } else if (state.ending) ending();
+  } else if (state.ending && $("intro").hidden) ending();
   setInterval(sync, 250);
 } catch (e) {
   $("fatal").hidden = false;

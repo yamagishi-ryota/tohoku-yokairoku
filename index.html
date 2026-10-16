@@ -5,16 +5,53 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#141d1a" />
     <title>東北妖解録</title>
+    <link rel="preload" as="image" href="assets/yokai/atlas.png" />
+    <link
+      rel="preload"
+      as="font"
+      type="font/ttf"
+      href="assets/fonts/YujiSyuku-game.ttf"
+      crossorigin
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body>
+  <body class="on-intro">
+    <section id="intro" aria-labelledby="intro-title">
+      <div class="intro-inner">
+        <span class="eyebrow">東北の地に、七つの気配。</span>
+        <h1 id="intro-title">東北妖解録</h1>
+        <p class="intro-lead">
+          土地の記憶をたどり、<br />七つの書に封じられた妖を解き放て。
+        </p>
+        <p>
+          あなたたちは、東北を旅する一行。<br />書の言葉と54枚の札を読み解き、仲間と相談して封印に挑みます。
+        </p>
+        <div class="intro-rules">
+          <p><b>一、書を読む</b><br />本文の行数と同じ枚数の札を選びます。</p>
+          <p>
+            <b>二、封印に挑む</b
+            ><br />正しければ解放。不正解でも60秒待てば次の書へ進めます。
+          </p>
+          <p>
+            <b>三、旅を続ける</b
+            ><br />七つの書を巡ったら旅を終えます。過去の書にも戻れます。
+          </p>
+        </div>
+        <p class="intro-note">
+          解放した札は使えなくなります。お告げには札1枚、回収には札2枚の代価が必要です。
+        </p>
+        <button id="begin" class="primary">次へ ― 旅を始める</button>
+        <p id="intro-save"></p>
+      </div>
+    </section>
     <header>
       <div>
         <span class="eyebrow">七つの書と、土地の記憶</span>
         <h1>東北妖解録</h1>
       </div>
       <div class="tools">
-        <button id="help">遊び方</button><button id="se">効果音 ON</button
+        <button id="sound-test">音を確認</button
+        ><button id="help">遊び方</button><button id="se">効果音 ON</button
         ><button id="bgm">環境音 OFF</button
         ><button id="reset">最初から</button>
       </div>
@@ -48,6 +85,11 @@
             <button id="prev">前の書</button><button id="next">次の書</button>
           </div>
           <button id="end">旅を終える</button>
+          <div class="notes-row">
+            <span id="oracle-summary">お告げの記録なし</span
+            ><button id="oracle-history">記録を見る</button>
+          </div>
+          <p id="audio-status" role="status"></p>
           <p id="save-status" role="status"></p>
         </div>
       </aside>

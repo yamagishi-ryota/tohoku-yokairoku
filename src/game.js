@@ -10,6 +10,7 @@ export function createGame(cards, chapters) {
       attemptCount: 0,
       solved: false,
       selected: [],
+      oracleNotes: [],
     })),
     cards: Object.fromEntries(ids.map((id) => [id, "available"])),
     globalLockUntil: 0,
@@ -83,10 +84,24 @@ export function createGame(cards, chapters) {
       selection = [...s.chapters[s.current].selected];
     s.cards[cost] = "discarded";
     clean(s);
-    if (type === "card") return answers.includes(target) ? "必要" : "不要";
-    if (type === "group")
-      return String(selection.filter((id) => answers.includes(id)).length);
-    return answers.some((id) => s.cards[id] === "discarded") ? "ある" : "ない";
+    const answer =
+      type === "card"
+        ? answers.includes(target)
+          ? "必要"
+          : "不要"
+        : type === "group"
+          ? String(selection.filter((id) => answers.includes(id)).length)
+          : answers.some((id) => s.cards[id] === "discarded")
+            ? "ある"
+            : "ない";
+    s.chapters[s.current].oracleNotes ??= [];
+    s.chapters[s.current].oracleNotes.push({
+      type,
+      target: type === "card" ? target : null,
+      selection: type === "group" ? selection : [],
+      answer,
+    });
+    return answer;
   }
   function recover(s, target, costs) {
     if (
@@ -138,6 +153,26 @@ export function createGame(cards, chapters) {
     )
       throw Error("保存データの形式が正しくありません。");
     s.chapters.forEach((ch, i) => {
+      // Existing v1 saves predate paid-oracle notes; retain all earlier progress.
+      ch.oracleNotes ??= [];
+      if (
+        !Array.isArray(ch.oracleNotes) ||
+        ch.oracleNotes.some(
+          (note) =>
+            !note ||
+            !["card", "group", "discarded"].includes(note.type) ||
+            !Array.isArray(note.selection) ||
+            note.selection.some((id) => !valid.has(id)) ||
+            (note.type === "card"
+              ? !valid.has(note.target) ||
+                !["必要", "不要"].includes(note.answer)
+              : note.type === "group"
+                ? !/^\d+$/.test(note.answer) ||
+                  Number(note.answer) > chapters[i].required_count
+                : !["ある", "ない"].includes(note.answer)),
+        )
+      )
+        throw Error("保存されたお告げの形式が正しくありません。");
       if (
         !Number.isInteger(ch.attemptCount) ||
         ch.attemptCount < 0 ||

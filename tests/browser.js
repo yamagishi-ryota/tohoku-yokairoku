@@ -39,7 +39,9 @@ try {
     errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("http://127.0.0.1:8765/");
-  await page.waitForSelector(".card");
+  await page.waitForSelector(".card", { state: "attached" });
+  if (await page.locator("#intro").isVisible())
+    await page.locator("#begin").click();
   await page.evaluate(() =>
     Promise.all([...document.images].map((i) => i.decode())),
   );
@@ -80,6 +82,8 @@ try {
   await page.clock.install({ time: new Date("2026-10-16T00:00:00Z") });
   await choose("S_2");
   await page.locator("#attempt").click();
+  assert.equal(await page.locator(".ritual.concealed").count(), 1);
+  await page.locator("#close").click();
   assert.equal(
     await page.locator("#message").textContent(),
     "解放できなかった……",
@@ -91,7 +95,7 @@ try {
     "true",
   );
   await page.reload();
-  await page.waitForSelector(".card");
+  await page.waitForSelector(".card", { state: "attached" });
   assert.equal(await page.locator("#next").isDisabled(), true);
   assert.equal(
     await page.locator('[data-id="S_2"] .choose').getAttribute("aria-pressed"),
@@ -161,7 +165,7 @@ try {
     true,
   );
   await page.reload();
-  await page.waitForSelector(".card");
+  await page.waitForSelector(".card", { state: "attached" });
   assert.equal(
     await page.locator('[data-id="S_4"] .badge').textContent(),
     "× 捨て札",
@@ -227,6 +231,7 @@ try {
     for (const c of cards.slice(1, 1 + chapters[i].required_count))
       await choose(c.id);
     await page.locator("#attempt").click();
+    await page.locator("#close").click();
     assert.equal(
       await page.locator("#message").textContent(),
       "解放できなかった……",
@@ -272,7 +277,9 @@ try {
   fallback.on("pageerror", (e) => errors.push(e.message));
   await fallback.route("**/assets/cards/*.png", (route) => route.abort());
   await fallback.goto("http://127.0.0.1:8765/");
-  await fallback.waitForSelector(".card");
+  await fallback.waitForSelector(".card", { state: "attached" });
+  if (await fallback.locator("#intro").isVisible())
+    await fallback.locator("#begin").click();
   await fallback
     .getByRole("button", { name: "白神山地を拡大", exact: true })
     .click();
@@ -288,7 +295,7 @@ try {
   await fallback.locator("#se").click();
   await fallback.locator("#bgm").click();
   await fallback.reload();
-  await fallback.waitForSelector(".card");
+  await fallback.waitForSelector(".card", { state: "attached" });
   assert.equal(await fallback.locator("#se").textContent(), "効果音 OFF");
   assert.equal(await fallback.locator("#bgm").textContent(), "環境音 ON");
   pass(
