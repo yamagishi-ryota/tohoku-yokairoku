@@ -179,3 +179,28 @@ test("save roundtrip preserves chapter choices, attempts, card states and audio 
   bad.cards.S_A = "invalid";
   assert.throws(() => g.restore(JSON.stringify(bad)));
 });
+
+test("paid hints persist per chapter without revealing unpaid information", () => {
+  const s = g.fresh();
+  assert.deepEqual(s.chapters[0].oracleNotes, []);
+  g.oracle(s, "card", "S_A", "S_2");
+  pick(s, ["S_A"]);
+  g.oracle(s, "group", null, "S_3");
+  assert.deepEqual(s.chapters[0].oracleNotes, [
+    { type: "card", target: "S_A", selection: [], answer: "必要" },
+    { type: "group", target: null, selection: ["S_A"], answer: "1" },
+  ]);
+  g.select(s, "S_A");
+  assert.deepEqual(s.chapters[0].oracleNotes[1].selection, ["S_A"]);
+  assert.equal(s.chapters[1].oracleNotes.length, 0);
+  assert.deepEqual(
+    g.restore(JSON.stringify(s)).chapters[0].oracleNotes,
+    s.chapters[0].oracleNotes,
+  );
+  const legacy = g.fresh();
+  legacy.chapters.forEach((ch) => delete ch.oracleNotes);
+  assert.deepEqual(
+    g.restore(JSON.stringify(legacy)).chapters[0].oracleNotes,
+    [],
+  );
+});
