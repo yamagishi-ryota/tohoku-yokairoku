@@ -213,6 +213,94 @@ try {
     }),
     true,
   );
+  const cropIds = cards
+    .filter((card) => card.sheet === 6)
+    .map((card) => card.id);
+  const crops = await page.evaluate(async (ids) => {
+    return Promise.all(
+      ids.map(async (id) => {
+        const image = new Image();
+        image.src = `assets/cards/${id}.png`;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0);
+        const pixels = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        ).data;
+        let white = 0;
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (pixels[i] > 240 && pixels[i + 1] > 240 && pixels[i + 2] > 240)
+            white++;
+        }
+        return { id, whiteRatio: white / (canvas.width * canvas.height) };
+      }),
+    );
+  }, cropIds);
+  crops.forEach((crop) =>
+    assert.ok(
+      crop.whiteRatio < 0.01,
+      `${crop.id} includes unwanted white sheet margin`,
+    ),
+  );
+  console.log("PASS: all nine sheet-6 crops exclude the white canvas margin");
+  await page.setViewportSize({ width: 1366, height: 768 });
+  const positions = await page
+    .locator(".card")
+    .evaluateAll((elements) =>
+      elements.map((e) => [e.dataset.id, e.offsetLeft, e.offsetTop]),
+    );
+  await page.evaluate((key) => {
+    const state = JSON.parse(localStorage.getItem(key));
+    state.cards.S_A = "released";
+    state.chapters[0].solved = true;
+    state.chapters[0].attemptCount = 1;
+    localStorage.setItem(key, JSON.stringify(state));
+  }, SAVE_KEY);
+  await page.reload();
+  await page.waitForSelector(".card");
+  for (const id of ["S_A", "S_2"]) {
+    const card = page.locator(`[data-id="${id}"]`);
+    assert.equal(await card.locator(".choose").isDisabled(), true);
+    const appearance = await card.evaluate((element) => {
+      const name = element.querySelector(".name"),
+        choose = element.querySelector(".choose");
+      const bounds = name.getBoundingClientRect(),
+        cardBounds = element.getBoundingClientRect();
+      return {
+        nameFilter: getComputedStyle(name).filter,
+        buttonFilter: getComputedStyle(choose).filter,
+        imageFilter: getComputedStyle(element.querySelector("img")).filter,
+        nameColor: getComputedStyle(name).color,
+        opacity: getComputedStyle(choose).opacity,
+        contained:
+          bounds.top >= cardBounds.top && bounds.bottom <= cardBounds.bottom,
+      };
+    });
+    assert.equal(appearance.nameFilter, "none");
+    assert.equal(appearance.buttonFilter, "none");
+    assert.notEqual(appearance.imageFilter, "none");
+    assert.equal(appearance.nameColor, "rgb(238, 231, 211)");
+    assert.equal(appearance.opacity, "1");
+    assert.equal(appearance.contained, true);
+  }
+  assert.deepEqual(
+    await page
+      .locator(".card")
+      .evaluateAll((elements) =>
+        elements.map((e) => [e.dataset.id, e.offsetLeft, e.offsetTop]),
+      ),
+    positions,
+  );
+  await page.screenshot({ path: "test-results/card-names-and-crops.png" });
+  console.log(
+    "PASS: released and discarded names remain bright, images alone dim, and all 54 positions stay fixed",
+  );
   assert.deepEqual(errors, []);
 } finally {
   await browser?.close();
