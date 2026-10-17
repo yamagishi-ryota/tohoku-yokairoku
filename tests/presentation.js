@@ -39,6 +39,13 @@ try {
     window.AudioContext = class extends NativeAudio {
       constructor(...args) {
         super(...args);
+        window.__natureSources = [];
+        const createSource = this.createBufferSource.bind(this);
+        this.createBufferSource = () => {
+          const source = createSource();
+          window.__natureSources.push(source);
+          return source;
+        };
         const analyser = this.createAnalyser(),
           destination = this.destination,
           create = this.createGain.bind(this);
@@ -76,6 +83,34 @@ try {
   assert.equal(audio.state, "running");
   assert.equal(audio.signal, true);
   console.log("PASS: user-initiated audio runs and emits a nonzero waveform");
+  await page.locator("#bgm").click();
+  await page.waitForTimeout(700);
+  const nature = await page.evaluate(() =>
+    window.__natureSources.map((source) => {
+      const data = source.buffer.getChannelData(0);
+      let min = 1,
+        max = -1;
+      for (let i = 0; i < data.length; i += 127) {
+        min = Math.min(min, data[i]);
+        max = Math.max(max, data[i]);
+      }
+      return {
+        loop: source.loop,
+        duration: source.buffer.duration,
+        variation: max - min,
+      };
+    }),
+  );
+  assert.equal(nature.length, 2);
+  assert.ok(
+    nature.every(
+      (layer) => layer.loop && layer.duration >= 19 && layer.variation > 0.1,
+    ),
+  );
+  await page.locator("#bgm").click();
+  console.log(
+    "PASS: ambience uses two varying wind/water sample layers instead of sustained oscillator tones",
+  );
   // Compare both attempts: shared animation, illustration, concealment and lock retained.
   await page.locator('[data-id="S_2"] .choose').click();
   await page.locator("#attempt").click();

@@ -1,5 +1,5 @@
 import { createGame, SAVE_KEY } from "./game.js";
-import { createAudio } from "./audio.js";
+import { createAudio } from "./audio.js?v=nature-1";
 const $ = (id) => document.getElementById(id);
 const node = (tag, text, cls) => {
   const e = document.createElement(tag);
@@ -8,7 +8,7 @@ const node = (tag, text, cls) => {
   return e;
 };
 async function load(path) {
-  const r = await fetch(new URL(path, document.baseURI));
+  const r = await fetch(new URL(path, document.baseURI), { cache: "no-cache" });
   if (!r.ok) throw Error(`${path} を読み込めません。`);
   return r.json();
 }
@@ -193,7 +193,11 @@ try {
             render();
           }
         });
-        b.append(node("span", c.heading), node("small", status));
+        b.append(
+          node("span", c.heading, "chapter-heading"),
+          node("small", status),
+          node("strong", c.region, "chapter-region"),
+        );
         b.title = `${c.heading} ／ ${c.yokai}（${c.region}）`;
         b.classList.toggle("active", i === state.current);
         if (i === state.current) b.setAttribute("aria-current", "step");
