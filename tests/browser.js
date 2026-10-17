@@ -199,6 +199,10 @@ try {
   for (let i = 0; i < 7; i++) {
     assert.equal(await page.locator(".region-tag").textContent(), regions[i]);
     assert.deepEqual(
+      await page.locator(".chapter-region").allTextContents(),
+      regions,
+    );
+    assert.deepEqual(
       await page.locator("#lines li").allTextContents(),
       chapters[i].lines,
     );
