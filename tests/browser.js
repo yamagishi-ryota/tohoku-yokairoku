@@ -198,14 +198,20 @@ try {
       await page.locator(".yokai-art").getAttribute("aria-label"),
       `${chapters[i].yokai}のイラスト`,
     );
-    const tile = await page.locator(".yokai-art").evaluate((element) => ({
-      x: element.style.getPropertyValue("--yokai-x"),
-      y: element.style.getPropertyValue("--yokai-y"),
-      source: getComputedStyle(element).backgroundImage,
-    }));
-    assert.equal(tile.x, `${((i % 4) * 100) / 3}%`);
-    assert.equal(tile.y, i < 4 ? "0%" : "100%");
-    assert.ok(tile.source.includes("atlas-shadow.png"));
+    const source = await page
+      .locator(".yokai-art")
+      .evaluate((element) => getComputedStyle(element).backgroundImage);
+    assert.ok(source.includes(`portraits/${chapters[i].id}.png`));
+    const portrait = await page.locator(".ritual").boundingBox();
+    assert.ok(
+      portrait.height > portrait.width,
+      "yokai artwork uses a portrait frame",
+    );
+    const closeButton = await page.locator("#close").boundingBox();
+    assert.ok(
+      closeButton.y + closeButton.height <= 768,
+      "portrait and close button fit the viewport",
+    );
     if (i === 6) {
       await page.waitForTimeout(1900);
       await page.screenshot({ path: "test-results/reference-aramitama.png" });

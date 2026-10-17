@@ -260,8 +260,7 @@ try {
         `ritual ${success ? "released" : "concealed"}`,
       );
       const art = node("div", undefined, "yokai-art");
-      art.style.setProperty("--yokai-x", `${((state.current % 4) * 100) / 3}%`);
-      art.style.setProperty("--yokai-y", state.current < 4 ? "0%" : "100%");
+      art.style.backgroundImage = `url("assets/yokai/portraits/${chapters[state.current].id}.png")`;
       art.setAttribute("role", "img");
       art.setAttribute(
         "aria-label",

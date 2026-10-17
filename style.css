@@ -425,8 +425,8 @@ dialog button {
   margin: auto;
 }
 .ritual {
-  width: min(420px, 76vw);
-  height: min(390px, 55vh);
+  width: min(344px, 44dvh, 76vw);
+  height: min(430px, 55dvh);
   position: relative;
   overflow: hidden;
   display: grid;
@@ -437,9 +437,8 @@ dialog button {
 .yokai-art {
   width: 100%;
   height: 100%;
-  background-image: url("assets/yokai/atlas-shadow.png");
-  background-size: 400% 200%;
-  background-position: var(--yokai-x) var(--yokai-y);
+  background-size: 100% 100%;
+  background-position: center;
   animation: spirit-appear 1.8s ease-out both;
 }
 .concealed .yokai-art {
