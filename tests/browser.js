@@ -186,14 +186,46 @@ try {
   await page.getByRole("button", { name: "実行する", exact: true }).click();
   assert.match(await page.locator("#heading").textContent(), /第一/);
   pass("reset requires explicit confirmation");
+  const regions = [
+    "青森県",
+    "岩手県",
+    "秋田県",
+    "宮城県",
+    "山形県",
+    "福島県",
+    "東北六県",
+  ];
   // Finish every chapter through real UI and verify exact source text and stable card coordinates.
   for (let i = 0; i < 7; i++) {
+    assert.equal(await page.locator(".region-tag").textContent(), regions[i]);
     assert.deepEqual(
       await page.locator("#lines li").allTextContents(),
       chapters[i].lines,
     );
     for (const id of chapters[i].answers.toReversed()) await choose(id);
     await page.locator("#attempt").click();
+    assert.equal(
+      await page.locator(".yokai-art").getAttribute("aria-label"),
+      `${chapters[i].yokai}のイラスト`,
+    );
+    const source = await page
+      .locator(".yokai-art")
+      .evaluate((element) => getComputedStyle(element).backgroundImage);
+    assert.ok(source.includes(`portraits/${chapters[i].id}.png`));
+    const portrait = await page.locator(".ritual").boundingBox();
+    assert.ok(
+      portrait.height > portrait.width,
+      "yokai artwork uses a portrait frame",
+    );
+    const closeButton = await page.locator("#close").boundingBox();
+    assert.ok(
+      closeButton.y + closeButton.height <= 768,
+      "portrait and close button fit the viewport",
+    );
+    if (i === 6) {
+      await page.waitForTimeout(1900);
+      await page.screenshot({ path: "test-results/reference-aramitama.png" });
+    }
     await page.locator("#close").click();
     if (i < 6) await page.locator("#next").click();
   }

@@ -207,7 +207,7 @@ try {
   assert.equal(
     await page.evaluate(async () => {
       const img = new Image();
-      img.src = "assets/yokai/atlas-cinematic.png";
+      img.src = "assets/yokai/portraits/ch1.png";
       await img.decode();
       return img.naturalWidth > 0;
     }),
