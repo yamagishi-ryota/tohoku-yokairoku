@@ -789,3 +789,19 @@ dialog button {
     padding-inline: 12px;
   }
 }
+
+.region-tag {
+  display: inline-block;
+  margin-left: 12px;
+  padding: 3px 8px;
+  border: 1px solid #887043;
+  border-radius: 3px;
+  background: #e1d2a5;
+  color: #40321c;
+  font:
+    600 12px/1.4 system-ui,
+    sans-serif;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+  white-space: nowrap;
+}

@@ -186,8 +186,18 @@ try {
   await page.getByRole("button", { name: "実行する", exact: true }).click();
   assert.match(await page.locator("#heading").textContent(), /第一/);
   pass("reset requires explicit confirmation");
+  const regions = [
+    "青森県",
+    "岩手県",
+    "秋田県",
+    "宮城県",
+    "山形県",
+    "福島県",
+    "東北六県",
+  ];
   // Finish every chapter through real UI and verify exact source text and stable card coordinates.
   for (let i = 0; i < 7; i++) {
+    assert.equal(await page.locator(".region-tag").textContent(), regions[i]);
     assert.deepEqual(
       await page.locator("#lines li").allTextContents(),
       chapters[i].lines,

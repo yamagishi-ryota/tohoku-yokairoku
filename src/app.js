@@ -194,12 +194,16 @@ try {
           }
         });
         b.append(node("span", c.heading), node("small", status));
+        b.title = `${c.heading} ／ ${c.yokai}（${c.region}）`;
         b.classList.toggle("active", i === state.current);
         if (i === state.current) b.setAttribute("aria-current", "step");
         return b;
       }),
     );
-    $("heading").textContent = `${chapter.heading} ／ ${chapter.yokai}`;
+    $("heading").replaceChildren(
+      node("span", `${chapter.heading} ／ ${chapter.yokai}`),
+      node("span", chapter.region, "region-tag"),
+    );
     $("heading")
       .closest(".paper")
       .classList.toggle("long", chapter.lines.length >= 4);
