@@ -84,6 +84,16 @@ try {
   await page.getByRole("button", { name: "実行する", exact: true }).click();
   assert.equal(await page.locator(".oracle-answer").textContent(), "必要");
   await page.locator(".oracle-vision img").evaluate((img) => img.decode());
+  assert.equal(
+    await page.locator(".oracle-vision img").getAttribute("src"),
+    "assets/scenes/oracle-shrine.png",
+  );
+  assert.equal(
+    await page
+      .locator(".oracle-vision img")
+      .evaluate((img) => getComputedStyle(img).objectFit),
+    "contain",
+  );
   await mkdir("test-results", { recursive: true });
   await page.clock.fastForward(1500);
   await page.screenshot({ path: "test-results/oracle-ceremony.png" });

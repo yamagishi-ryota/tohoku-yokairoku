@@ -6,6 +6,7 @@ for (const chapter of chapters)
   await access(`assets/yokai/portraits/${chapter.id}.png`);
 await access("assets/fonts/YujiSyuku-game.ttf");
 await access("assets/fonts/OFL.txt");
+await access("assets/scenes/oracle-shrine.png");
 await rm("dist", { recursive: true, force: true });
 await mkdir("dist");
 for (const path of [
