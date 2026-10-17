@@ -194,6 +194,22 @@ try {
     );
     for (const id of chapters[i].answers.toReversed()) await choose(id);
     await page.locator("#attempt").click();
+    assert.equal(
+      await page.locator(".yokai-art").getAttribute("aria-label"),
+      `${chapters[i].yokai}のイラスト`,
+    );
+    const tile = await page.locator(".yokai-art").evaluate((element) => ({
+      x: element.style.getPropertyValue("--yokai-x"),
+      y: element.style.getPropertyValue("--yokai-y"),
+      source: getComputedStyle(element).backgroundImage,
+    }));
+    assert.equal(tile.x, `${((i % 4) * 100) / 3}%`);
+    assert.equal(tile.y, i < 4 ? "0%" : "100%");
+    assert.ok(tile.source.includes("atlas-shadow.png"));
+    if (i === 6) {
+      await page.waitForTimeout(1900);
+      await page.screenshot({ path: "test-results/reference-aramitama.png" });
+    }
     await page.locator("#close").click();
     if (i < 6) await page.locator("#next").click();
   }
