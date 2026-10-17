@@ -398,8 +398,8 @@ try {
             const body = open("神のお告げ");
             const vision = node("div", undefined, "oracle-vision");
             const image = node("img");
-            image.src = "assets/cards/JOKER_RED.png?v=frames-2";
-            image.alt = "奥羽山脈に差すお告げの光";
+            image.src = "assets/scenes/oracle-shrine.png";
+            image.alt = "社殿で札を奉納する巫女と、金色に輝く神託の祭壇";
             vision.append(image, node("span", "神のお告げ", "oracle-sigil"));
             body.append(vision, node("p", answer, "oracle-answer"));
             sound(true);
