@@ -1,5 +1,5 @@
 import { createGame, SAVE_KEY } from "./game.js";
-import { createAudio } from "./audio.js?v=nature-1";
+import { createAudio } from "./audio.js?v=volume-2";
 const $ = (id) => document.getElementById(id);
 const node = (tag, text, cls) => {
   const e = document.createElement(tag);
@@ -42,6 +42,15 @@ try {
   const audio = createAudio((text) => {
     $("audio-status").textContent = text;
   });
+  audio.setVolume(state.volume);
+  $("volume").value = String(Math.round(state.volume * 100));
+  $("volume-value").textContent = `${$("volume").value}%`;
+  $("volume").oninput = () => {
+    state.volume = Number($("volume").value) / 100;
+    audio.setVolume(state.volume);
+    $("volume-value").textContent = `${$("volume").value}%`;
+    if (!blocked) save();
+  };
   function sound(success) {
     if (state.se) void audio.play(success);
   }
@@ -69,12 +78,29 @@ try {
   $("begin").onclick = enterGame;
   const modal = $("modal"),
     content = $("modal-content");
-  let lastFocus;
+  let lastFocus, advanceTimer;
+  function finishRelease() {
+    clearTimeout(advanceTimer);
+    const from = state.autoAdvanceFrom;
+    if (from === null || from === undefined) return;
+    state.autoAdvanceFrom = null;
+    if (
+      state.current === from &&
+      state.chapters[from].solved &&
+      from < chapters.length - 1
+    ) {
+      game.move(state, from + 1);
+      message = "";
+    }
+    save();
+    render();
+  }
   function open(title) {
     if (!modal.open) lastFocus = document.activeElement;
     const heading = node("h2", title);
     heading.id = "modal-title";
     heading.tabIndex = -1;
+    content.className = "";
     content.replaceChildren(heading);
     if (!modal.open) modal.showModal();
     heading.focus();
@@ -82,10 +108,13 @@ try {
   }
   function close() {
     modal.close();
+    finishRelease();
     lastFocus?.focus();
   }
   $("close").onclick = close;
-  modal.addEventListener("close", () => lastFocus?.focus());
+  modal.addEventListener("close", () => {
+    lastFocus?.focus();
+  });
   const btn = (text, fn) => {
     const b = node("button", text);
     b.type = "button";
@@ -118,6 +147,8 @@ try {
   function sync() {
     $("se").disabled = blocked;
     $("bgm").disabled = blocked;
+    $("volume").disabled = blocked;
+    $("gallery").disabled = blocked || !state.chapters.some((ch) => ch.solved);
     const ch = state.chapters[state.current],
       chapter = chapters[state.current];
     $("attempt").disabled = blocked || !game.canAttempt(state);
@@ -257,6 +288,8 @@ try {
   $("attempt").onclick = () => {
     try {
       const success = game.attempt(state);
+      if (success && state.current < chapters.length - 1)
+        state.autoAdvanceFrom = state.current;
       message = success ? "封印解放" : "解放できなかった……";
       save();
       render();
@@ -268,7 +301,8 @@ try {
         `ritual ${success ? "released" : "concealed"}`,
       );
       const art = node("div", undefined, "yokai-art");
-      art.style.backgroundImage = `url("assets/yokai/portraits/${chapters[state.current].id}.png")`;
+      art.style.backgroundImage = `url("assets/yokai/portraits/${chapters[state.current].id}.png?v=bride-2")`;
+      if (state.current === 4) art.classList.add("restored-bride");
       art.setAttribute("role", "img");
       art.setAttribute(
         "aria-label",
@@ -285,10 +319,17 @@ try {
         node(
           "p",
           success
-            ? "書を包む気配が、静かにほどけていく。"
+            ? state.current < chapters.length - 1
+              ? "封印が解けた。4秒後に次の書へ進みます。"
+              : "書を包む気配が、静かにほどけていく。"
             : "妖の姿は、まだ影の中にある。",
         ),
       );
+      if (success && state.current < chapters.length - 1) {
+        advanceTimer = setTimeout(() => {
+          if (state.autoAdvanceFrom !== null) close();
+        }, 4000);
+      }
     } catch (e) {
       message = e.message;
       render();
@@ -354,7 +395,14 @@ try {
             const answer = game.oracle(state, t, id, payment);
             save();
             render();
-            open("お告げ").append(node("p", answer));
+            const body = open("神のお告げ");
+            const vision = node("div", undefined, "oracle-vision");
+            const image = node("img");
+            image.src = "assets/cards/JOKER_RED.png?v=frames-2";
+            image.alt = "奥羽山脈に差すお告げの光";
+            vision.append(image, node("span", "神のお告げ", "oracle-sigil"));
+            body.append(vision, node("p", answer, "oracle-answer"));
+            sound(true);
           },
         );
       }),
@@ -410,16 +458,24 @@ try {
         shadows.append(node("span", undefined, "shadow"));
     });
     land.append(shadows);
+    const storyteller = node("img", undefined, "ending-art");
+    storyteller.src = "assets/cards/JOKER_BLACK.png?v=frames-2";
+    storyteller.alt = "語り部のカード画像";
+    if (complete) body.append(storyteller);
     body.append(
       land,
       node(
         "p",
         complete
-          ? "すべての書が閉じられた。妖たちの気配は、静かに遠ざかっていく。だが、土地に刻まれた記憶は消えない。"
+          ? "東北の地に眠る全ての妖怪が解放された。あなたは東北の語り部となったのだ。"
           : "七つの書は閉じられた。しかし、解かれぬ影は今も東北の地に潜んでいる。",
       ),
     );
-    if (complete) body.append(node("p", "語り部", "storyteller"));
+    if (complete) {
+      land.hidden = true;
+      body.classList.add("complete-ending");
+      body.append(node("p", "語り部", "storyteller"));
+    }
     $("close").hidden = true;
     body.append(
       btn("書に戻る", () => {
@@ -432,6 +488,7 @@ try {
   }
   modal.addEventListener("cancel", (e) => {
     if (state.ending) e.preventDefault();
+    else finishRelease();
   });
   $("end").onclick = () => {
     game.end(state);
@@ -464,6 +521,9 @@ try {
         state = game.fresh();
         blocked = false;
         message = "";
+        audio.setVolume(state.volume);
+        $("volume").value = String(Math.round(state.volume * 100));
+        $("volume-value").textContent = `${$("volume").value}%`;
         ambience();
         save();
         render();
@@ -515,6 +575,32 @@ try {
         );
     }
   };
+  $("gallery").onclick = () => {
+    const body = open("解放した妖の記録"),
+      grid = node("div", undefined, "gallery-grid");
+    chapters.forEach((chapter, i) => {
+      if (!state.chapters[i].solved) return;
+      const card = btn("", () => {
+        const page = open(
+          `${chapter.heading} ／ ${chapter.yokai}（${chapter.region}）`,
+        );
+        const image = node("img", undefined, "gallery-portrait");
+        image.src = `assets/yokai/portraits/${chapter.id}.png?v=bride-2`;
+        image.alt = chapter.yokai;
+        page.append(
+          image,
+          btn("一覧へ戻る", () => $("gallery").onclick()),
+        );
+      });
+      const image = node("img");
+      image.src = `assets/yokai/portraits/${chapter.id}.png?v=bride-2`;
+      image.alt = chapter.yokai;
+      card.append(image, node("span", `${chapter.yokai} ／ ${chapter.region}`));
+      grid.append(card);
+    });
+    body.append(grid);
+  };
+  finishRelease();
   render();
   $("intro-save").textContent = state.chapters.some((ch) => ch.attemptCount > 0)
     ? "保存された旅の続きから再開します。"

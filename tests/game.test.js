@@ -204,3 +204,19 @@ test("paid hints persist per chapter without revealing unpaid information", () =
     [],
   );
 });
+
+test("legacy saves gain a default volume; invalid volume and pending transitions are rejected", () => {
+  const state = g.fresh();
+  delete state.volume;
+  delete state.autoAdvanceFrom;
+  const restored = g.restore(JSON.stringify(state));
+  assert.equal(restored.volume, 0.65);
+  assert.equal(restored.autoAdvanceFrom, null);
+  restored.volume = 0;
+  assert.equal(g.restore(JSON.stringify(restored)).volume, 0);
+  restored.volume = 1.1;
+  assert.throws(() => g.restore(JSON.stringify(restored)));
+  restored.volume = 0.65;
+  restored.autoAdvanceFrom = 6;
+  assert.throws(() => g.restore(JSON.stringify(restored)));
+});

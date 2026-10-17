@@ -13,7 +13,7 @@
       href="assets/fonts/YujiSyuku-game.ttf"
       crossorigin
     />
-    <link rel="stylesheet" href="style.css?v=nature-regions-7" />
+    <link rel="stylesheet" href="style.css?v=journey-8" />
   </head>
   <body class="on-intro">
     <section id="intro" aria-labelledby="intro-title">
@@ -50,7 +50,18 @@
         <h1>東北妖解録</h1>
       </div>
       <div class="tools">
-        <button id="sound-test">音を確認</button
+        <label class="volume-control" for="volume"
+          >音量
+          <input
+            id="volume"
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value="65"
+          /><output id="volume-value" for="volume">65%</output></label
+        ><button id="gallery">解放した妖</button
+        ><button id="sound-test">音を確認</button
         ><button id="help">遊び方</button><button id="se">効果音 ON</button
         ><button id="bgm">環境音 OFF</button
         ><button id="reset">最初から</button>
@@ -102,6 +113,6 @@
       <button id="close">閉じる</button>
     </dialog>
     <div id="fatal" role="alert" hidden></div>
-    <script type="module" src="src/app.js?v=nature-regions-7"></script>
+    <script type="module" src="src/app.js?v=journey-8"></script>
   </body>
 </html>

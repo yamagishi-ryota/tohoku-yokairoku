@@ -2,6 +2,7 @@
 export function createAudio(onError = () => {}) {
   let context,
     master,
+    volume = 0.65,
     ambienceNodes = [],
     ambienceBuffers,
     ambienceRevision = 0,
@@ -13,7 +14,7 @@ export function createAudio(onError = () => {}) {
       if (!context || context.state === "closed") {
         context = new Audio();
         master = context.createGain();
-        master.gain.value = 0.65;
+        master.gain.value = volume;
         master.connect(context.destination);
       }
       if (context.state !== "running") await context.resume();
@@ -132,5 +133,10 @@ export function createAudio(onError = () => {}) {
       ambienceNodes.push({ source, gain, filter });
     });
   }
-  return { unlock, play, ambience };
+  function setVolume(value) {
+    if (!Number.isFinite(value)) return;
+    volume = Math.max(0, Math.min(1, value));
+    if (master) master.gain.setTargetAtTime(volume, context.currentTime, 0.03);
+  }
+  return { unlock, play, ambience, setVolume };
 }
