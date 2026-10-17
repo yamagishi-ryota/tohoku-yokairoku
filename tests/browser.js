@@ -122,7 +122,7 @@ try {
     await page.locator('[data-id="S_A"] .choose').isDisabled(),
     true,
   );
-  await page.locator("#next").click();
+  assert.match(await page.locator("#heading").textContent(), /第二/);
   await choose("S_3");
   await choose("H_2");
   assert.equal(
@@ -135,7 +135,7 @@ try {
   await selects.nth(2).selectOption("S_3");
   await page.getByRole("button", { name: "確認へ", exact: true }).click();
   await page.getByRole("button", { name: "実行する", exact: true }).click();
-  assert.equal(await page.locator("#modal-content p").textContent(), "2");
+  assert.equal(await page.locator(".oracle-answer").textContent(), "2");
   await page.locator("#close").click();
   assert.equal(
     await page.locator('[data-id="S_3"] .badge').textContent(),
@@ -231,7 +231,11 @@ try {
       await page.screenshot({ path: "test-results/reference-aramitama.png" });
     }
     await page.locator("#close").click();
-    if (i < 6) await page.locator("#next").click();
+    if (i < 6)
+      assert.match(
+        await page.locator("#heading").textContent(),
+        new RegExp(chapters[i + 1].heading),
+      );
   }
   assert.deepEqual(
     await page
@@ -253,6 +257,14 @@ try {
   });
   await page.locator("#end").click();
   assert.equal(await page.locator(".storyteller").textContent(), "語り部");
+  assert.match(
+    await page.locator(".complete-ending").textContent(),
+    /東北の地に眠る全ての妖怪が解放された。あなたは東北の語り部となったのだ。/,
+  );
+  assert.equal(
+    await page.locator(".ending-art").getAttribute("src"),
+    "assets/cards/JOKER_BLACK.png?v=frames-2",
+  );
   await page.reload();
   await page.waitForSelector(".storyteller");
   await page.getByRole("button", { name: "書に戻る", exact: true }).click();

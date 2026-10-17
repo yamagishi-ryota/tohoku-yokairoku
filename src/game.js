@@ -14,6 +14,8 @@ export function createGame(cards, chapters) {
     })),
     cards: Object.fromEntries(ids.map((id) => [id, "available"])),
     globalLockUntil: 0,
+    volume: 0.65,
+    autoAdvanceFrom: null,
     se: true,
     bgm: false,
     ending: null,
@@ -129,6 +131,18 @@ export function createGame(cards, chapters) {
   function restore(raw) {
     if (!raw) return fresh();
     const s = JSON.parse(raw);
+    s.volume ??= 0.65;
+    s.autoAdvanceFrom ??= null;
+    if (
+      !Number.isFinite(s.volume) ||
+      s.volume < 0 ||
+      s.volume > 1 ||
+      (s.autoAdvanceFrom !== null &&
+        (!Number.isInteger(s.autoAdvanceFrom) ||
+          s.autoAdvanceFrom < 0 ||
+          s.autoAdvanceFrom >= chapters.length - 1))
+    )
+      throw Error("保存された音量・進行情報が正しくありません。");
     if (
       s.version !== 1 ||
       !Number.isInteger(s.current) ||
