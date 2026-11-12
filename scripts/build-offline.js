@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import path from "node:path";
+import { spawnSync } from "node:child_process";
 const read = (file) => readFile(file, "utf8");
 const cards = JSON.parse(await read("cards.json")),
   chapters = JSON.parse(await read("chapters.json"));
@@ -12,17 +12,28 @@ const assets = [
     "assets/fonts/YujiSyuku-game.ttf",
   ]),
 ];
-const embedded = {};
-for (const file of assets) {
-  const mime = file.endsWith(".ttf") ? "font/ttf" : "image/png";
-  embedded[file] =
-    `data:${mime};base64,${(await readFile(file)).toString("base64")}`;
-}
+const images = assets.filter((file) => !file.endsWith(".ttf"));
+const compression = spawnSync(
+  "python3",
+  ["scripts/compress-offline-images.py"],
+  {
+    input: JSON.stringify(images),
+    encoding: "utf8",
+    maxBuffer: 32 * 1024 * 1024,
+  },
+);
+if (compression.status !== 0)
+  throw Error(
+    compression.stderr ||
+      "WebP encoding failed. Pillow with WebP support is required.",
+  );
+const embedded = JSON.parse(compression.stdout);
+const font = `data:font/ttf;base64,${(await readFile("assets/fonts/YujiSyuku-game.ttf")).toString("base64")}`;
 const json = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
 let css = await read("style.css");
 css = css.replace(
   /url\(["']?(assets\/[^"')]+)["']?\)/g,
-  (_, file) => `url("${embedded[file]}")`,
+  (_, file) => `url("${file.endsWith(".ttf") ? font : embedded[file]}")`,
 );
 let app = await read("src/app.js");
 app = app.replace(/^import .*;\n/gm, "");

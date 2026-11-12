@@ -9,7 +9,8 @@
     "test:e2e": "node tests/browser.js && node tests/presentation.js && node tests/manuscript.js && node tests/journey.js",
     "build": "node scripts/build.js",
     "build:offline": "node scripts/build-offline.js",
-    "test:offline": "node tests/offline.js"
+    "test:offline": "node tests/offline.js",
+    "package:offline": "npm run build:offline && python3 scripts/package-offline.py"
   },
   "devDependencies": {
     "playwright": "1.58.2"

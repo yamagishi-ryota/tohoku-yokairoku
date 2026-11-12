@@ -82,7 +82,7 @@ try {
         await page
           .locator(".yokai-art")
           .evaluate((e) => e.style.backgroundImage)
-      ).includes("data:image/png;base64,"),
+      ).includes("data:image/webp;base64,"),
     );
     await page.locator("#close").click();
   }
