@@ -101,7 +101,7 @@ try {
     await page.locator('[data-id="S_2"] .choose').getAttribute("aria-pressed"),
     "true",
   );
-  await page.clock.fastForward(60001);
+  await page.clock.fastForward(15001);
   assert.equal(await page.locator("#next").isDisabled(), false);
   await page.locator("#next").click();
   assert.match(await page.locator("#heading").textContent(), /第二/);
@@ -111,7 +111,7 @@ try {
     "true",
   );
   pass(
-    "failed selection and 60-second lock survive reload; unsolved progression and return",
+    "failed selection and 15-second lock survive reload; unsolved progression and return",
   );
   await choose("S_2");
   await choose("S_A");
@@ -284,7 +284,7 @@ try {
       await page.locator("#message").textContent(),
       "解放できなかった……",
     );
-    await page.clock.fastForward(60001);
+    await page.clock.fastForward(15001);
     if (i < 6) await page.locator("#next").click();
   }
   assert.equal(await page.locator("dialog").isVisible(), false);

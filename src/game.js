@@ -14,6 +14,7 @@ export function createGame(cards, chapters) {
     })),
     cards: Object.fromEntries(ids.map((id) => [id, "available"])),
     globalLockUntil: 0,
+    retryDelayMs: 15000,
     volume: 0.65,
     autoAdvanceFrom: null,
     se: true,
@@ -54,7 +55,7 @@ export function createGame(cards, chapters) {
       ch.solved = true;
       answers.forEach((id) => (s.cards[id] = "released"));
       clean(s);
-    } else s.globalLockUntil = now + 60000;
+    } else s.globalLockUntil = now + 15000;
     return success;
   }
   function canMove(s, target, now = Date.now()) {
@@ -133,6 +134,14 @@ export function createGame(cards, chapters) {
     const s = JSON.parse(raw);
     s.volume ??= 0.65;
     s.autoAdvanceFrom ??= null;
+    // Keep existing progress while shortening timers saved by the 60-second version.
+    s.retryDelayMs ??= 60000;
+    if (s.retryDelayMs === 60000) {
+      s.globalLockUntil = Math.max(0, s.globalLockUntil - 45000);
+      s.retryDelayMs = 15000;
+    }
+    if (s.retryDelayMs !== 15000)
+      throw Error("保存された待機時間が正しくありません。");
     if (
       !Number.isFinite(s.volume) ||
       s.volume < 0 ||

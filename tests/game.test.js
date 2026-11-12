@@ -41,7 +41,7 @@ test("first chapter accepts only S_A; every other single card fails with no part
     assert.equal(s.chapters[0].attemptCount, 1);
     if (c.id !== "S_A") {
       assert.deepEqual(s.chapters[0].selected, [c.id]);
-      assert.equal(s.globalLockUntil, 60100);
+      assert.equal(s.globalLockUntil, 15100);
     }
   }
 });
@@ -73,26 +73,26 @@ test("selection cannot exceed count, under-count cannot attempt; solved cards ca
   assert.equal(g.canAttempt(s), false);
   assert.deepEqual(s.chapters[0].selected, []);
 });
-test("60s global lock persists and gates all movement including backward; selection can change", () => {
+test("15s global lock persists and gates all movement including backward; selection can change", () => {
   let s = g.fresh();
   pick(s, ["S_2"]);
   g.attempt(s, 1000);
-  assert.equal(g.move(s, 1, 60999), false);
-  assert.equal(g.canAttempt(s, 60999), false);
+  assert.equal(g.move(s, 1, 15999), false);
+  assert.equal(g.canAttempt(s, 15999), false);
   s = g.restore(JSON.stringify(s));
-  assert.equal(s.globalLockUntil, 61000);
+  assert.equal(s.globalLockUntil, 16000);
   assert.deepEqual(s.chapters[0].selected, ["S_2"]);
   assert.equal(g.select(s, "S_2"), true);
   pick(s, ["S_A"]);
-  assert.equal(g.move(s, 1, 61000), true);
-  assert.equal(g.move(s, 0, 61000), true);
-  assert.equal(g.move(s, 2, 61000), false);
+  assert.equal(g.move(s, 1, 16000), true);
+  assert.equal(g.move(s, 0, 16000), true);
+  assert.equal(g.move(s, 2, 16000), false);
   assert.deepEqual(s.chapters[0].selected, ["S_A"]);
-  g.move(s, 1, 61000);
+  g.move(s, 1, 16000);
   pick(s, ["S_4", "S_5"]);
-  g.attempt(s, 61000);
-  assert.equal(g.move(s, 0, 61001), false);
-  assert.equal(g.move(s, 0, 121000), true);
+  g.attempt(s, 16000);
+  assert.equal(g.move(s, 0, 16001), false);
+  assert.equal(g.move(s, 0, 31000), true);
 });
 test("all oracle types charge one card and follow snapshots and post-payment discard rules", () => {
   const s = g.fresh();
@@ -155,12 +155,12 @@ test("all solved ending and mixed ending; final failed attempt requires full tim
       t,
       cards.slice(1, 1 + chapters[i].required_count).map((c) => c.id),
     );
-    g.attempt(t, i * 60000);
-    if (i < 6) assert.equal(g.move(t, i + 1, (i + 1) * 60000), true);
+    g.attempt(t, i * 15000);
+    if (i < 6) assert.equal(g.move(t, i + 1, (i + 1) * 15000), true);
   }
-  assert.equal(g.canEnd(t, 419999), false);
+  assert.equal(g.canEnd(t, 104999), false);
   assert.equal(t.ending, null);
-  assert.equal(g.end(t, 420000), "remaining");
+  assert.equal(g.end(t, 105000), "remaining");
   assert.equal(t.endingReached, true);
   assert.equal(g.restore(JSON.stringify(t)).ending, "remaining");
 });
@@ -219,4 +219,19 @@ test("legacy saves gain a default volume; invalid volume and pending transitions
   restored.volume = 0.65;
   restored.autoAdvanceFrom = 6;
   assert.throws(() => g.restore(JSON.stringify(restored)));
+});
+
+test("saved 60-second locks migrate once to 15 seconds without changing selections or attempts", () => {
+  const old = g.fresh();
+  delete old.retryDelayMs;
+  old.globalLockUntil = 61000;
+  old.chapters[0].selected = ["S_2"];
+  old.chapters[0].attemptCount = 1;
+  const restored = g.restore(JSON.stringify(old));
+  assert.equal(restored.globalLockUntil, 16000);
+  assert.equal(g.locked(restored, 15999), true);
+  assert.equal(g.locked(restored, 16000), false);
+  assert.deepEqual(restored.chapters[0].selected, ["S_2"]);
+  assert.equal(restored.chapters[0].attemptCount, 1);
+  assert.deepEqual(g.restore(JSON.stringify(restored)), restored);
 });

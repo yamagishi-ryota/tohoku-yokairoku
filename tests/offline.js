@@ -53,7 +53,7 @@ try {
     await page.locator('[data-id="S_2"] .choose').getAttribute("aria-pressed"),
     "true",
   );
-  await page.clock.fastForward(60001);
+  await page.clock.fastForward(15001);
   await page.locator('[data-id="S_2"] .choose').click();
   // Pay for an oracle and decode the shrine illustration with the machine offline.
   await page.locator("#oracle").click();
@@ -103,7 +103,7 @@ try {
   assert.deepEqual(requests, []);
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: self-contained handout works with the browser offline; 54 cards, save/reload, 60s lock, paid shrine oracle, seven releases, gallery and storyteller image; zero external requests",
+    "PASS: self-contained handout works with the browser offline; 54 cards, save/reload, 15s lock, paid shrine oracle, seven releases, gallery and storyteller image; zero external requests",
   );
   // A school browser may deny storage for local files: keep play available and report unsaved progress.
   const limited = await browser.newContext({ offline: true });
