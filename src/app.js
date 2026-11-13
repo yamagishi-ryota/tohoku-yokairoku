@@ -366,7 +366,7 @@ try {
     const target = selectField(body, "質問対象の札", cards),
       cost = selectField(
         body,
-        "奉納する札",
+        "奉納する札（捨てる札）",
         cards.filter((c) => state.cards[c.id] === "available"),
       );
     const label = target.parentElement;
