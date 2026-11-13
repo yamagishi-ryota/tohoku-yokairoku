@@ -356,12 +356,12 @@ try {
     return select;
   }
   $("oracle").onclick = () => {
-    const body = open("神のお告げ");
+    const body = open("神のおつげ（ヒント）");
     body.append(node("p", "質問ひとつにつき、利用可能な札を1枚奉納します。"));
     const type = selectField(body, "質問の種類", [
-      { id: "card", display_rank: "", name: "選びし札を問う" },
-      { id: "group", display_rank: "", name: "選びし組を問う" },
-      { id: "discarded", display_rank: "", name: "捨てし札を問う" },
+      { id: "card", display_rank: "", name: "選びし札を問う（必要か不要か）" },
+      { id: "group", display_rank: "", name: "選びし組（何枚合っているか）" },
+      { id: "discarded", display_rank: "", name: "捨てし札（捨てていないか）" },
     ]);
     const target = selectField(body, "質問対象の札", cards),
       cost = selectField(
@@ -395,12 +395,15 @@ try {
             const answer = game.oracle(state, t, id, payment);
             save();
             render();
-            const body = open("神のお告げ");
+            const body = open("神のおつげ（ヒント）");
             const vision = node("div", undefined, "oracle-vision");
             const image = node("img");
             image.src = "assets/scenes/oracle-shrine.png";
             image.alt = "社殿で札を奉納する巫女と、金色に輝く神託の祭壇";
-            vision.append(image, node("span", "神のお告げ", "oracle-sigil"));
+            vision.append(
+              image,
+              node("span", "神のおつげ（ヒント）", "oracle-sigil"),
+            );
             body.append(vision, node("p", answer, "oracle-answer"));
             sound(true);
           },
@@ -539,7 +542,7 @@ try {
       ),
       node(
         "p",
-        "解放に使った札は以後使えません。不正解後15秒は再挑戦と章移動を待ちます。選択変更・拡大・神のお告げ・カード回収は待機中も操作できます。",
+        "解放に使った札は以後使えません。不正解後15秒は再挑戦と章移動を待ちます。選択変更・拡大・神のおつげ（ヒント）・カード回収は待機中も操作できます。",
       ),
       node(
         "p",

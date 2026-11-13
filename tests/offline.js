@@ -34,6 +34,10 @@ try {
   await page.locator("#begin").click();
   await page.waitForSelector(".card");
   assert.equal(await page.locator(".card").count(), 54);
+  assert.equal(
+    await page.locator("#oracle").textContent(),
+    "神のおつげ（ヒント）",
+  );
   await page.evaluate(() =>
     Promise.all([...document.images].map((img) => img.decode())),
   );
@@ -44,6 +48,14 @@ try {
   await page.locator("#close").click();
   await page.clock.install();
   await page.locator('[data-id="S_2"] .choose').click();
+  assert.equal(
+    await page
+      .locator('[data-id="S_2"]')
+      .evaluate((card) => getComputedStyle(card).outlineWidth),
+    "6px",
+  );
+  await mkdir("test-results", { recursive: true });
+  await page.screenshot({ path: "test-results/classroom-gold-selection.png" });
   await page.locator("#attempt").click();
   await page.locator("#close").click();
   assert.equal(await page.locator("#next").isDisabled(), true);
@@ -58,6 +70,12 @@ try {
   // Pay for an oracle and decode the shrine illustration with the machine offline.
   await page.locator("#oracle").click();
   let selects = page.locator("dialog select");
+  assert.deepEqual(await selects.nth(0).locator("option").allTextContents(), [
+    "選んでください",
+    " 選びし札を問う（必要か不要か）",
+    " 選びし組（何枚合っているか）",
+    " 捨てし札（捨てていないか）",
+  ]);
   await selects.nth(0).selectOption("card");
   await selects.nth(1).selectOption("S_A");
   await selects.nth(2).selectOption("S_3");

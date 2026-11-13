@@ -142,9 +142,12 @@ main {
   background: #111a16;
 }
 .card.selected {
-  outline: 3px solid #f4cc72;
-  outline-offset: -3px;
-  box-shadow: 0 0 10px #d8ae5855;
+  outline: 6px solid #ffdb58;
+  outline-offset: -2px;
+  box-shadow:
+    0 0 0 1px #44310d,
+    0 0 14px #ffdb5870;
+  z-index: 2;
 }
 .choose {
   position: absolute;
@@ -1101,4 +1104,9 @@ dialog button {
   .complete-ending button {
     grid-column: 2;
   }
+}
+
+#oracle {
+  font-size: clamp(10px, 0.9vw, 12px);
+  white-space: nowrap;
 }
